@@ -13,7 +13,11 @@ def superware():
             api_config = APIConfig()
             access_id = request.headers.get("access_id") or ""
             api_key = request.headers.get("api_key") or ""
-            token = request.headers.get("token") or ""
+            bearer_token = request.headers.get("Authorization") or ""
+            token_keys = bearer_token.split("Bearer ")
+            token = ""
+            if len(token_keys) == 2:
+                token = token_keys[1]
             user_session = session_manager.get_super_token(token)
             if api_config.is_doubloon_access_id(access_id) and \
                     api_config.is_doubloon_api_key(api_key) and \

@@ -7,7 +7,7 @@ from modules.User.managers.AppUserManager import AppUserManager
 from modules.User.managers.SystemRoleManager import SystemRoleManager
 from modules.User.objects.AppUser import AppUser
 from modules.User.objects.SystemRole import SystemRole
-from routes.middleware import superware
+from routes.middleware.superware import superware
 
 app_api = Blueprint('app_api', __name__)
 
@@ -45,7 +45,7 @@ def app_create():
 
 
 @app_api.route("/api/v1/app/search", methods=["GET"])
-@superware.superware()
+@superware()
 def app_search():
     return jsonify({
         "test": "Hello two"

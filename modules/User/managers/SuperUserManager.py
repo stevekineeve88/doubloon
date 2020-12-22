@@ -31,7 +31,7 @@ class SuperUserManager:
     def get(self, super_user_id: int) -> SuperUser:
         result = self.super_user_repo.load(super_user_id)
         if not result.get_status() or not result.get_data():
-            raise Exception("Could not fetch super user")
+            raise Exception(result.get_message())
         return self.__build_super_user_obj(result.get_data()[0])
 
     def get_by_username(self, username: str) -> SuperUser:
