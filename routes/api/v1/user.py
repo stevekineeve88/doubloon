@@ -32,3 +32,38 @@ def create_super_user():
             "success": False,
             "message": str(e)
         })
+
+
+@user_api.route("/api/v1/user/super/list", methods=["POST"])
+@superware()
+def list_super_users():
+    try:
+        super_user_manager = SuperUserManager()
+        post = json.loads(request.data.decode())
+        limit = post["limit"] if "limit" in post else 100
+        limit = 100 if limit > 100 else limit
+        result = super_user_manager.search(
+            search=post["search"] if "search" in post else "",
+            limit=limit,
+            page=post["page"] if "page" in post else 1,
+            user_status_id=post["user_status"] if "user_status" in post else None,
+            order=post["order"] if "order" in post else {}
+        )
+        users = result.get_data()
+        user: SuperUser
+        user_result = []
+        for user in users:
+            user_result.append(user.to_dict())
+        return jsonify({
+            "success": True,
+            "result": {
+                "data": user_result,
+                "meta": result.get_metadata()
+            }
+        })
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        })

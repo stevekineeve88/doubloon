@@ -57,14 +57,13 @@ class SuperUserManager:
         limit = kwargs.get("limit") or 100
         page = kwargs.get("page") or 1
         offset = (limit * page) - limit if page > 0 else 0
-        status = kwargs.get("status") or self.user_statuses.ACTIVE["id"]
-        order = kwargs.get("order") or {
-            "id": 1
-        }
-        result = self.super_user_repo.search(search, limit, offset, status, order)
+        user_status_id = kwargs.get("user_status_id") or self.user_statuses.ACTIVE["id"]
+        order = kwargs.get("order") or {}
+        result = self.super_user_repo.search(search, limit, offset, user_status_id, order)
         if not result.get_status():
-            return result
+            raise Exception("Could not fetch users")
         data = result.get_data()
+        result.set_metadata_attribute("last_page", int(result.get_metadata_attribute("total_count") / limit))
         users = []
         for datum in data:
             users.append(self.__build_super_user_obj(datum))
