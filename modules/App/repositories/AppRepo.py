@@ -81,7 +81,44 @@ class AppRepo:
             cursor.close()
 
     def search(self, search: str, limit: int, offset: int, order: dict) -> Result:
-        pass
+        result = Result()
+        try:
+            order_by_columns = []
+            not_ordered = ["id", "uuid", "api_key"]
+            for key, value in order.items():
+                if key in not_ordered:
+                    raise Exception("Order not allowed")
+                order_clause = "ASC" if value > 0 else "DESC"
+                order_by_columns.append(f'"App_Apps".{key} {order_clause}')
+            order_statement = f'ORDER BY {", ".join(order_by_columns)}' if len(order_by_columns) > 0 else ""
+            cursor = self.db_connection.get_cursor()
+            cursor.execute('SELECT '
+                           '"App_Apps".id, '
+                           '"App_Apps".uuid, '
+                           '"App_Apps".name, '
+                           '"App_Apps".api_key, '
+                           '"App_Apps".created_date, '
+                           'count(*) OVER() AS count '
+                           'FROM "App_Apps" '
+                           'WHERE "App_Apps".name LIKE %(search)s '
+                           f'{order_statement} '
+                           'LIMIT %(limit)s OFFSET %(offset)s',
+                           {
+                               "search": f'%{search}%',
+                               "limit": limit,
+                               "offset": offset
+                           })
+            data = cursor.fetchall()
+            cursor.close()
+            result.set_data(data)
+            result.set_metadata({
+                "total_count": data[0]["count"] if len(data) > 0 else 0
+            })
+            return result
+        except Exception as e:
+            result.set_status(False)
+            result.set_message(str(e))
+            return result
 
     def update_api_key(self, app_id: int, api_key: str) -> Result:
         pass

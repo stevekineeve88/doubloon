@@ -2,6 +2,7 @@ import random
 import string
 import re
 import sys
+from math import ceil
 
 from modules.App.objects.App import App
 from modules.App.repositories.AppRepo import AppRepo
@@ -39,17 +40,16 @@ class AppManager:
         limit = kwargs.get("limit") or 100
         page = kwargs.get("page") or 1
         offset = (limit * page) - limit if page > 0 else 0
-        order = kwargs.get("order") or {
-            "id": 1
-        }
+        order = kwargs.get("order") or {}
         result = self.__app_repo.search(search, limit, offset, order)
         if not result.get_status():
-            return result
+            raise Exception("Could not fetch apps")
         data = result.get_data()
-        users = []
+        result.set_metadata_attribute("last_page", int(ceil(result.get_metadata_attribute("total_count") / limit)))
+        apps = []
         for datum in data:
-            users.append(self.__build_app_obj(datum))
-        result.set_data(users)
+            apps.append(self.__build_app_obj(datum))
+        result.set_data(apps)
         return result
 
     def hard_delete(self, app_id: int) -> bool:

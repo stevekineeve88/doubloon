@@ -3,6 +3,7 @@ import json
 from flask import Blueprint, jsonify, request
 
 from modules.App.managers.AppManager import AppManager
+from modules.App.objects.App import App
 from modules.User.managers.AppUserManager import AppUserManager
 from modules.User.managers.SystemRoleManager import SystemRoleManager
 from modules.User.objects.AppUser import AppUser
@@ -44,9 +45,34 @@ def app_create():
         })
 
 
-@app_api.route("/api/v1/app/search", methods=["GET"])
+@app_api.route("/api/v1/app/search", methods=["POST"])
 @superware()
 def app_search():
-    return jsonify({
-        "test": "Hello two"
-    })
+    try:
+        app_manager = AppManager()
+        post = json.loads(request.data.decode())
+        limit = post["limit"] if "limit" in post else 100
+        limit = 100 if limit > 100 else limit
+        result = app_manager.search(
+            search=post["search"] if "search" in post else "",
+            limit=limit,
+            page=post["page"] if "page" in post else 1,
+            order=post["order"] if "order" in post else {}
+        )
+        apps = result.get_data()
+        app: App
+        app_result = []
+        for app in apps:
+            app_result.append(app.to_dict())
+        return jsonify({
+            "success": True,
+            "result": {
+                "data": app_result,
+                "meta": result.get_metadata()
+            }
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        })

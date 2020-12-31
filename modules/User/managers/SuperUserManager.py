@@ -1,3 +1,5 @@
+from math import ceil
+
 import bcrypt
 
 from modules.User.managers.UserStatusManager import UserStatusManager
@@ -31,7 +33,7 @@ class SuperUserManager:
     def get(self, super_user_id: int) -> SuperUser:
         result = self.super_user_repo.load(super_user_id)
         if not result.get_status() or not result.get_data():
-            raise Exception(result.get_message())
+            raise Exception("Could not fetch super user")
         return self.__build_super_user_obj(result.get_data()[0])
 
     def get_by_username(self, username: str) -> SuperUser:
@@ -41,15 +43,21 @@ class SuperUserManager:
         return self.__build_super_user_obj(result.get_data()[0])
 
     def delete(self, super_user_id: int) -> SuperUser:
-        self.super_user_repo.update_status(super_user_id, self.user_statuses.DELETED["id"])
+        result = self.super_user_repo.update_status(super_user_id, self.user_statuses.DELETED["id"])
+        if not result.get_status():
+            raise Exception("Could not delete user")
         return self.get(super_user_id)
 
     def disable(self, super_user_id: int) -> SuperUser:
-        self.super_user_repo.update_status(super_user_id, self.user_statuses.DISABLED["id"])
+        result = self.super_user_repo.update_status(super_user_id, self.user_statuses.DISABLED["id"])
+        if not result.get_status():
+            raise Exception("Could not disable user")
         return self.get(super_user_id)
 
     def activate(self, super_user_id: int) -> SuperUser:
-        self.super_user_repo.update_status(super_user_id, self.user_statuses.ACTIVE["id"])
+        result = self.super_user_repo.update_status(super_user_id, self.user_statuses.ACTIVE["id"])
+        if not result.get_status():
+            raise Exception("Could not activate user")
         return self.get(super_user_id)
 
     def search(self, **kwargs) -> Result:
@@ -63,7 +71,7 @@ class SuperUserManager:
         if not result.get_status():
             raise Exception("Could not fetch users")
         data = result.get_data()
-        result.set_metadata_attribute("last_page", int(result.get_metadata_attribute("total_count") / limit))
+        result.set_metadata_attribute("last_page", int(ceil(result.get_metadata_attribute("total_count") / limit)))
         users = []
         for datum in data:
             users.append(self.__build_super_user_obj(datum))
@@ -77,7 +85,9 @@ class SuperUserManager:
             "email": user.get_email(),
             "phone": user.get_phone()
         }
-        self.super_user_repo.update(user.get_id(), data)
+        result = self.super_user_repo.update(user.get_id(), data)
+        if not result.get_status():
+            raise Exception("Could not update super user")
         return self.get(user.get_id())
 
     def update_password(self, super_user_id: int, old_password: str, new_password: str):
@@ -85,7 +95,9 @@ class SuperUserManager:
         if not bcrypt.checkpw(str.encode(old_password), str.encode(user.get_password())):
             raise Exception("Password authentication failed for old password")
         user.set_password(new_password)
-        self.super_user_repo.update_password(super_user_id, user.get_password())
+        result = self.super_user_repo.update_password(super_user_id, user.get_password())
+        if not result.get_status():
+            raise Exception("Failed to update password")
         return user
 
     def __build_super_user_obj(self, data) -> SuperUser:

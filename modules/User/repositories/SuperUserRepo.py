@@ -8,8 +8,8 @@ class SuperUserRepo:
 
     def insert(self, data: dict) -> Result:
         result = Result()
+        cursor = self.db_connection.get_cursor()
         try:
-            cursor = self.db_connection.get_cursor()
             cursor.execute('INSERT INTO "User_SuperUsers" '
                            '(first_name, last_name, user_status_id, username, password, email, phone) '
                            'VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id',
@@ -24,18 +24,20 @@ class SuperUserRepo:
                            )
             user_id = cursor.fetchone()["id"]
             self.db_connection.get_connection().commit()
-            cursor.close()
             result.set_insert_id(user_id)
             return result
         except Exception as e:
             result.set_status(False)
             result.set_message(str(e))
             return result
+        finally:
+            self.db_connection.get_connection().rollback()
+            cursor.close()
 
     def load(self, user_id: int) -> Result:
         result = Result()
+        cursor = self.db_connection.get_cursor()
         try:
-            cursor = self.db_connection.get_cursor()
             cursor.execute('SELECT '
                            '"User_SuperUsers".id, '
                            '"User_SuperUsers".uuid, '
@@ -52,18 +54,19 @@ class SuperUserRepo:
                            (user_id,)
                            )
             data = cursor.fetchall()
-            cursor.close()
             result.set_data(data)
             return result
         except Exception as e:
             result.set_status(False)
             result.set_message(str(e))
             return result
+        finally:
+            cursor.close()
 
     def load_by_username(self, username: str) -> Result:
         result = Result()
+        cursor = self.db_connection.get_cursor()
         try:
-            cursor = self.db_connection.get_cursor()
             cursor.execute('SELECT '
                            '"User_SuperUsers".id, '
                            '"User_SuperUsers".uuid, '
@@ -80,16 +83,18 @@ class SuperUserRepo:
                            (username,)
                            )
             data = cursor.fetchall()
-            cursor.close()
             result.set_data(data)
             return result
         except Exception as e:
             result.set_status(False)
             result.set_message(str(e))
             return result
+        finally:
+            cursor.close()
 
     def search(self, search: str, limit: int, offset: int, user_status_id: int, order: dict) -> Result:
         result = Result()
+        cursor = self.db_connection.get_cursor()
         try:
             order_by_columns = []
             not_ordered = ["id", "uuid", "user_status_id", "password"]
@@ -99,7 +104,6 @@ class SuperUserRepo:
                 order_clause = "ASC" if value > 0 else "DESC"
                 order_by_columns.append(f'"User_SuperUsers".{key} {order_clause}')
             order_statement = f'ORDER BY {", ".join(order_by_columns)}' if len(order_by_columns) > 0 else ""
-            cursor = self.db_connection.get_cursor()
             cursor.execute('SELECT '
                            '"User_SuperUsers".id, '
                            '"User_SuperUsers".uuid, '
@@ -129,7 +133,6 @@ class SuperUserRepo:
                                "offset": offset
                            })
             data = cursor.fetchall()
-            cursor.close()
             result.set_data(data)
             result.set_metadata({
                 "total_count": data[0]["count"] if len(data) > 0 else 0
@@ -139,59 +142,71 @@ class SuperUserRepo:
             result.set_status(False)
             result.set_message(str(e))
             return result
+        finally:
+            cursor.close()
 
-    def update_status(self, user_id: int, status_id: int) -> Result:
-        data_container = Result()
+    def update_status(self, user_id: int, user_status_id: int) -> Result:
+        result = Result()
+        cursor = self.db_connection.get_cursor()
         try:
-            cursor = self.db_connection.get_cursor()
-            cursor.execute("UPDATE Super_Users "
-                           "SET Super_Users.system_status_id = ? "
-                           "WHERE Super_Users.id = ?",
-                           (status_id, user_id)
+            cursor.execute('UPDATE "User_SuperUsers" '
+                           'SET user_status_id = %(user_status_id)s '
+                           'WHERE id = %(id)s',
+                           {
+                               "user_status_id": user_status_id,
+                               "id": user_id
+                           }
                            )
             self.db_connection.get_connection().commit()
+            return result
+        except Exception as e:
+            result.set_status(False)
+            result.set_message(str(e))
+            return result
+        finally:
+            self.db_connection.get_connection().rollback()
             cursor.close()
-            return data_container
-        except Exception:
-            data_container.set_status(False)
-            return data_container
 
     def update(self, user_id: int, data: dict) -> Result:
-        data_container = Result()
+        result = Result()
+        cursor = self.db_connection.get_cursor()
         try:
-            cursor = self.db_connection.get_cursor()
-            cursor.execute("UPDATE Super_Users"
-                           "SET Super_Users.first_name = ?"
-                           "Super_Users.last_name = ?"
-                           "Super_Users.email = ?"
-                           "Super_Users.phone = ?"
-                           "WHERE Super_Users.id = ?",
-                           (
-                               data["first_name"],
-                               data["last_name"],
-                               data["email"],
-                               data["phone"],
-                               user_id)
+            data["id"] = user_id
+            cursor.execute('UPDATE "User_SuperUsers" '
+                            'SET first_name = %(first_name)s, '
+                            'last_name = %(last_name)s, '
+                            'email = %(email)s, '
+                            'phone = %(phone)s '
+                           'WHERE id = %(id)s',
+                           data
                            )
             self.db_connection.get_connection().commit()
+            return result
+        except Exception as e:
+            result.set_status(False)
+            result.set_message(str(e))
+            return result
+        finally:
+            self.db_connection.get_connection().rollback()
             cursor.close()
-            return data_container
-        except Exception:
-            data_container.set_status(False)
-            return data_container
 
-    def update_password(self, user_id: int, password: str) -> Result:
-        data_container = Result()
+    def update_password(self, super_user_id: int, password: str) -> Result:
+        result = Result()
+        cursor = self.db_connection.get_cursor()
         try:
-            cursor = self.db_connection.get_cursor()
-            cursor.execute("UPDATE Super_Users"
-                           "SET Super_Users.password = ?"
-                           "WHERE Super_Users.id = ?",
-                           (password, user_id)
-                           )
+            cursor.execute('UPDATE "User_SuperUsers" '
+                           'SET password = %(password)s '
+                           'WHERE id = %(id)s',
+                           {
+                               "password": password,
+                               "id": super_user_id
+                           })
             self.db_connection.get_connection().commit()
+            return result
+        except Exception as e:
+            result.set_status(False)
+            result.set_message(str(e))
+            return result
+        finally:
+            self.db_connection.get_connection().rollback()
             cursor.close()
-            return data_container
-        except Exception:
-            data_container.set_status(False)
-            return data_container

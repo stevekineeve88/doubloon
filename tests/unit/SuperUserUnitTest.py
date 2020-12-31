@@ -1,5 +1,6 @@
 import unittest
 from datetime import datetime
+from math import ceil
 from unittest.mock import patch, MagicMock
 
 import bcrypt
@@ -260,7 +261,7 @@ class SuperUserUnitTest(unittest.TestCase):
         }
         result_set = [user_mock2.get_all(), user_mock1.get_all()]
         total_count = len(result_set)
-        last_page = int(total_count / limit)
+        last_page = int(ceil(total_count / limit))
         result = ObjectGenerator.create_result(True, result_set, None, {
             "total_count": total_count
         })
