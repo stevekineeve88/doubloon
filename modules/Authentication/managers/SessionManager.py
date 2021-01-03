@@ -22,10 +22,10 @@ class SessionManager:
         self.session[self.ADMIN_SESSION] = {token: user.to_dict()}
 
     def set_app_token(self, token: str, user: AppUser):
-        app_name = user.get_app().get_name()
-        if app_name not in self.session:
-            self.session[app_name] = {}
-        self.session[app_name] = {token: user.to_dict()}
+        app_uuid = user.get_app().get_uuid()
+        if app_uuid not in self.session:
+            self.session[app_uuid] = {}
+        self.session[app_uuid] = {token: user.to_dict()}
 
     def get_super_token(self, token: str) -> dict or None:
         if self.SUPER_SESSION in self.session and token in self.session[self.SUPER_SESSION]:
@@ -37,7 +37,7 @@ class SessionManager:
             return self.session[self.ADMIN_SESSION][token]
         return None
 
-    def get_app_token(self, app_name: str, token: str) -> dict or None:
-        if app_name in self.session and token in self.session[app_name]:
-            return self.session[app_name][token]
+    def get_app_token(self, app_uuid: str, token: str) -> dict or None:
+        if app_uuid in self.session and token in self.session[app_uuid]:
+            return self.session[app_uuid][token]
         return None

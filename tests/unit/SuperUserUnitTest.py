@@ -1,5 +1,6 @@
 import unittest
 from datetime import datetime
+from math import ceil
 from unittest.mock import patch, MagicMock
 
 import bcrypt
@@ -254,35 +255,28 @@ class SuperUserUnitTest(unittest.TestCase):
         )
         limit = 2
         page = 1
-        status = self.USER_STATUSES.ACTIVE["id"]
+        user_status_id = self.USER_STATUSES.ACTIVE["id"]
         order = {
             "username": -1
         }
         result_set = [user_mock2.get_all(), user_mock1.get_all()]
         total_count = len(result_set)
-        result_start = 0
-        result_end = len(result_set) - 1
-        next_offset = len(result_set)
+        last_page = int(ceil(total_count / limit))
         result = ObjectGenerator.create_result(True, result_set, None, {
-            "total_count": total_count,
-            "result_start": result_start,
-            "result_end": result_end,
-            "next_offset": next_offset
+            "total_count": total_count
         })
         self.super_user_repo.search = MagicMock(return_value=result)
         result_manager = self.super_user_manager.search(
             search=search_username,
             limit=limit,
             page=page,
-            status=status,
+            user_status_id=user_status_id,
             order=order
         )
         offset = (page * limit) - limit
-        self.super_user_repo.search.assert_called_once_with(search_username, limit, offset, status, order)
+        self.super_user_repo.search.assert_called_once_with(search_username, limit, offset, user_status_id, order)
         self.assertEqual(total_count, result_manager.get_metadata_attribute("total_count"))
-        self.assertEqual(result_start, result_manager.get_metadata_attribute("result_start"))
-        self.assertEqual(result_end, result_manager.get_metadata_attribute("result_end"))
-        self.assertEqual(next_offset, result_manager.get_metadata_attribute("next_offset"))
+        self.assertEqual(last_page, result_manager.get_metadata_attribute("last_page"))
         user_objs = result_manager.get_data()
         for i in range(0, len(result_set)):
             self.assertEqual(result_set[i]["username"], user_objs[i].get_username())
