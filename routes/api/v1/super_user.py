@@ -1,7 +1,5 @@
 import json
 from flask import Blueprint, jsonify, request
-
-from modules.Authentication.managers.SessionManager import SessionManager
 from modules.User.managers.SuperUserManager import SuperUserManager
 from modules.User.objects.SuperUser import SuperUser
 from routes.config.APIConfig import APIConfig
@@ -179,7 +177,7 @@ def update_super_user(super_user_id):
 
 @super_user_api.route("/api/v1/user/super/update-password/<super_user_id>", methods=["PATCH"])
 @superware()
-def test(super_user_id):
+def update_super_user_password(super_user_id):
     try:
         api_config: APIConfig = APIConfig()
         if not api_config.is_super_user_logged_in(super_user_id, request.headers.get("Authorization")):
