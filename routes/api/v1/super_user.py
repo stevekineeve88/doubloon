@@ -2,7 +2,7 @@ import json
 from flask import Blueprint, jsonify, request
 from modules.User.managers.SuperUserManager import SuperUserManager
 from modules.User.objects.SuperUser import SuperUser
-from routes.config.APIConfig import APIConfig
+from routes.middleware.superselfware import superselfware
 from routes.middleware.superware import superware
 
 super_user_api = Blueprint('super_user_api', __name__)
@@ -145,12 +145,9 @@ def list_super_users():
 
 
 @super_user_api.route("/api/v1/user/super/update/<super_user_id>", methods=["PATCH"])
-@superware()
+@superselfware()
 def update_super_user(super_user_id):
     try:
-        api_config: APIConfig = APIConfig()
-        if not api_config.is_super_user_logged_in(super_user_id, request.headers.get("Authorization")):
-            raise Exception("Unable to update user")
         super_user_manager = SuperUserManager()
         post = json.loads(request.data.decode())
         user = super_user_manager.get(super_user_id)
@@ -176,12 +173,9 @@ def update_super_user(super_user_id):
 
 
 @super_user_api.route("/api/v1/user/super/update-password/<super_user_id>", methods=["PATCH"])
-@superware()
+@superselfware()
 def update_super_user_password(super_user_id):
     try:
-        api_config: APIConfig = APIConfig()
-        if not api_config.is_super_user_logged_in(super_user_id, request.headers.get("Authorization")):
-            raise Exception("Unable to update user")
         super_user_manager = SuperUserManager()
         post = json.loads(request.data.decode())
         super_user_manager.update_password(super_user_id, post["old_password"], post["new_password"])

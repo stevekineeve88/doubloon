@@ -64,6 +64,52 @@ class AppRepo:
         finally:
             cursor.close()
 
+    def load_by_name(self, app_name: str) -> Result:
+        result = Result()
+        cursor = self.db_connection.get_cursor()
+        try:
+            cursor.execute('SELECT '
+                           '"App_Apps".id, '
+                           '"App_Apps".uuid, '
+                           '"App_Apps".name, '
+                           '"App_Apps".api_key, '
+                           '"App_Apps".created_date '
+                           'FROM "App_Apps"'
+                           'WHERE "App_Apps".name = %(app_name)s',
+                           {"app_name": app_name})
+            data = cursor.fetchall()
+            result.set_data(data)
+            return result
+        except Exception as e:
+            result.set_message(str(e))
+            result.set_status(False)
+            return result
+        finally:
+            cursor.close()
+
+    def load_by_uuid(self, app_uuid: str) -> Result:
+        result = Result()
+        cursor = self.db_connection.get_cursor()
+        try:
+            cursor.execute('SELECT '
+                           '"App_Apps".id, '
+                           '"App_Apps".uuid, '
+                           '"App_Apps".name, '
+                           '"App_Apps".api_key, '
+                           '"App_Apps".created_date '
+                           'FROM "App_Apps"'
+                           'WHERE "App_Apps".uuid = %(app_uuid)s',
+                           {"app_uuid": app_uuid})
+            data = cursor.fetchall()
+            result.set_data(data)
+            return result
+        except Exception as e:
+            result.set_message(str(e))
+            result.set_status(False)
+            return result
+        finally:
+            cursor.close()
+
     def delete(self, app_id) -> Result:
         result = Result()
         cursor = self.db_connection.get_cursor()

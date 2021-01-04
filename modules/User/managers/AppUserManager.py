@@ -1,3 +1,5 @@
+from math import ceil
+
 import bcrypt
 
 from modules.App.managers.AppManager import AppManager
@@ -47,6 +49,13 @@ class AppUserManager:
         app = self.app_manager.get(app_id)
         return self.__build_app_user_obj(result.get_data()[0], app)
 
+    def get_by_username(self, username: str, app_id: id) -> AppUser:
+        result = self.app_user_repo.load_by_username(username, app_id)
+        if not result.get_status() or not result.get_data():
+            raise Exception("Could not find user")
+        app = self.app_manager.get(app_id)
+        return self.__build_app_user_obj(result.get_data()[0], app)
+
     def delete(self, app_user_id: int) -> AppUser:
         self.app_user_repo.update_status(app_user_id, self.user_statuses.DELETED["id"])
         return self.get(app_user_id)
@@ -59,16 +68,13 @@ class AppUserManager:
         self.app_user_repo.update_status(app_user_id, self.user_statuses.ACTIVE["id"])
         return self.get(app_user_id)
 
-    def search_app_users(self, app_id, **kwargs):
-        app = self.app_manager.get(app_id)
+    def search_app_users(self, app: App, **kwargs):
         search = kwargs.get("search") or ""
         limit = kwargs.get("limit") or 100
         page = kwargs.get("page") or 1
         offset = (limit * page) - limit if page > 0 else 0
         status = kwargs.get("status") or self.user_statuses.ACTIVE["id"]
-        order = kwargs.get("order") or {
-            "id": 1
-        }
+        order = kwargs.get("order") or {}
         result = self.app_user_repo.search_app_users(
             app.get_name(),
             search,
@@ -78,7 +84,8 @@ class AppUserManager:
             order
         )
         if not result.get_status():
-            return result
+            raise Exception("Could not fetch users")
+        result.set_metadata_attribute("last_page", int(ceil(result.get_metadata_attribute("total_count") / limit)))
         data = result.get_data()
         users = []
         for datum in data:
