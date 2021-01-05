@@ -49,23 +49,28 @@ class AppUserManager:
         app = self.app_manager.get(app_id)
         return self.__build_app_user_obj(result.get_data()[0], app)
 
-    def get_by_username(self, username: str, app_id: id) -> AppUser:
-        result = self.app_user_repo.load_by_username(username, app_id)
+    def get_by_username(self, username: str, app: App) -> AppUser:
+        result = self.app_user_repo.load_by_username(username, app.get_id())
         if not result.get_status() or not result.get_data():
             raise Exception("Could not find user")
-        app = self.app_manager.get(app_id)
         return self.__build_app_user_obj(result.get_data()[0], app)
 
     def delete(self, app_user_id: int) -> AppUser:
-        self.app_user_repo.update_status(app_user_id, self.user_statuses.DELETED["id"])
+        result = self.app_user_repo.update_status(app_user_id, self.user_statuses.DELETED["id"])
+        if not result.get_status():
+            raise Exception("Could not delete user")
         return self.get(app_user_id)
 
     def disable(self, app_user_id: int) -> AppUser:
-        self.app_user_repo.update_status(app_user_id, self.user_statuses.DISABLED["id"])
+        result = self.app_user_repo.update_status(app_user_id, self.user_statuses.DISABLED["id"])
+        if not result.get_status():
+            raise Exception("Could not disable user")
         return self.get(app_user_id)
 
     def activate(self, app_user_id: int) -> AppUser:
-        self.app_user_repo.update_status(app_user_id, self.user_statuses.ACTIVE["id"])
+        result = self.app_user_repo.update_status(app_user_id, self.user_statuses.ACTIVE["id"])
+        if not result.get_status():
+            raise Exception("Could not delete user")
         return self.get(app_user_id)
 
     def search_app_users(self, app: App, **kwargs):
@@ -125,7 +130,9 @@ class AppUserManager:
             "email": user.get_email(),
             "phone": user.get_phone()
         }
-        self.app_user_repo.update(user.get_id(), data)
+        result = self.app_user_repo.update(user.get_id(), data)
+        if not result.get_status():
+            raise Exception("Could not update user")
         return self.get(user.get_id())
 
     def update_password(self, app_user_id: int, old_password: str, new_password: str) -> AppUser:
@@ -133,7 +140,9 @@ class AppUserManager:
         if not bcrypt.checkpw(str.encode(old_password), str.encode(user.get_password())):
             raise Exception("Password authentication failed for old password")
         user.set_password(new_password)
-        self.app_user_repo.update_password(app_user_id, user.get_password())
+        result = self.app_user_repo.update_password(app_user_id, user.get_password())
+        if not result.get_status():
+            raise Exception("Failed to update password")
         return user
 
     def __build_app_user_obj(self, data: dict, app: App):

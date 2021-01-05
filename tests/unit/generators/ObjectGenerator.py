@@ -4,6 +4,7 @@ from modules.App.objects.App import App
 from modules.User.objects.AppUser import AppUser
 from modules.User.objects.SuperUser import SuperUser
 from modules.User.objects.SystemRole import SystemRole
+from modules.User.objects.UserStatus import UserStatus
 from modules.Util.DataList import DataList
 from modules.Util.Result import Result
 
@@ -91,3 +92,7 @@ class ObjectGenerator:
     @staticmethod
     def create_system_role(data_list_item: dict) -> SystemRole:
         return SystemRole(data_list_item["id"], data_list_item["const"], data_list_item["description"])
+
+    @staticmethod
+    def create_user_status(data_list_item: dict) -> UserStatus:
+        return UserStatus(data_list_item["id"], data_list_item["const"], data_list_item["description"])

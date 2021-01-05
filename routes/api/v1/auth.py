@@ -58,3 +58,32 @@ def admin_login():
             "success": False,
             "message": str(e)
         })
+
+
+@auth_api.route("/api/v1/auth/app/login", methods=["POST"])
+def app_login():
+    try:
+        post = json.loads(request.data.decode())
+        auth_manager = AuthenticationManager()
+        app_manager = AppManager()
+        app = app_manager.get_by_name(post["app_name"])
+        result = auth_manager.login_app(post["username"], post["password"], app)
+        if not result.get_status():
+            return jsonify({
+                "success": False,
+                "message": result.get_message()
+            })
+        user_dict = result.get_data()[0].to_dict()
+        user_dict.pop("app")
+        return jsonify({
+            "success": True,
+            "results": {
+                "token": result.get_metadata_attribute("token"),
+                "user": user_dict
+            }
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        })
