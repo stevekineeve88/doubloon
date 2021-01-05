@@ -1,17 +1,20 @@
 from functools import wraps
 from flask import jsonify, request
-from routes.config.APIConfig import APIConfig
+from routes.middleware.config.CheckpointBuilder import CheckpointBuilder
+from routes.middleware.config.checkpoints.SuperCheckpoint import SuperCheckpoint
 
 
 def superware():
     def _superware(f):
         @wraps(f)
         def __superware(*args, **kwargs):
-            api_config = APIConfig()
             access_id = request.headers.get("access_id") or ""
             api_key = request.headers.get("api_key") or ""
             bearer_token = request.headers.get("Authorization") or ""
-            if api_config.is_super_user_auth(access_id, api_key, bearer_token):
+            checkpoint_builder = CheckpointBuilder([
+                SuperCheckpoint(access_id, api_key, bearer_token)
+            ])
+            if checkpoint_builder.passes():
                 return f(*args, **kwargs)
             return jsonify({
                 "success": False,

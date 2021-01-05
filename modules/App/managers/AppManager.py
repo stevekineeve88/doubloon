@@ -35,6 +35,18 @@ class AppManager:
             raise Exception(result.get_message())
         return self.__build_app_obj(result.get_data()[0])
 
+    def get_by_name(self, app_name: str) -> App:
+        result = self.__app_repo.load_by_name(app_name)
+        if not result.get_status() or not result.get_data():
+            raise Exception("Could not find app")
+        return self.__build_app_obj(result.get_data()[0])
+    
+    def get_by_uuid(self, app_uuid) -> App:
+        result = self.__app_repo.load_by_uuid(app_uuid)
+        if not result.get_status() or not result.get_data():
+            raise Exception("Could not find app")
+        return self.__build_app_obj(result.get_data()[0])
+
     def search(self, **kwargs):
         search = kwargs.get("search") or ""
         limit = kwargs.get("limit") or 100

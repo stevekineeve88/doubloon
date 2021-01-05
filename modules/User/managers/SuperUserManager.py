@@ -39,7 +39,7 @@ class SuperUserManager:
     def get_by_username(self, username: str) -> SuperUser:
         result = self.super_user_repo.load_by_username(username)
         if not result.get_status() or not result.get_data():
-            raise Exception(result.get_message())
+            raise Exception("Could not find user")
         return self.__build_super_user_obj(result.get_data()[0])
 
     def delete(self, super_user_id: int) -> SuperUser:
