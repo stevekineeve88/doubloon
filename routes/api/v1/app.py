@@ -8,13 +8,14 @@ from modules.User.managers.AppUserManager import AppUserManager
 from modules.User.managers.SystemRoleManager import SystemRoleManager
 from modules.User.objects.AppUser import AppUser
 from modules.User.objects.SystemRole import SystemRole
+from routes.middleware.adminware import adminware
 from routes.middleware.superware import superware
 
 app_api = Blueprint('app_api', __name__)
 
 
 @app_api.route("/api/v1/app/create", methods=["POST"])
-def app_create():
+def create_app():
     try:
         app_manager = AppManager()
         app_user_manager = AppUserManager()
@@ -45,9 +46,27 @@ def app_create():
         })
 
 
+@app_api.route("/api/v1/app/get", methods=["GET"])
+@adminware()
+def get_app():
+    try:
+        app_manager = AppManager()
+        app_uuid = request.headers.get("app_access_id") or ""
+        app = app_manager.get_by_uuid(app_uuid)
+        return jsonify({
+            "success": True,
+            "result": app.to_dict()
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        })
+
+
 @app_api.route("/api/v1/app/search", methods=["POST"])
 @superware()
-def app_search():
+def search_apps():
     try:
         app_manager = AppManager()
         post = json.loads(request.data.decode())
