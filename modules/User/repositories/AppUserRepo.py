@@ -177,10 +177,67 @@ class AppUserRepo:
         pass
 
     def update_status(self, app_user_id: int, user_status_id: int) -> Result:
-        pass
+        result = Result()
+        cursor = self.db_connection.get_cursor()
+        try:
+            cursor.execute('UPDATE "User_AppUsers" '
+                           'SET user_status_id = %(user_status_id)s '
+                           'WHERE id = %(id)s',
+                           {
+                               "user_status_id": user_status_id,
+                               "id": app_user_id
+                           }
+                           )
+            self.db_connection.get_connection().commit()
+            return result
+        except Exception as e:
+            result.set_status(False)
+            result.set_message(str(e))
+            return result
+        finally:
+            self.db_connection.get_connection().rollback()
+            cursor.close()
 
     def update(self, app_user_id: int, data: dict) -> Result:
-        pass
+        result = Result()
+        cursor = self.db_connection.get_cursor()
+        try:
+            data["id"] = app_user_id
+            cursor.execute('UPDATE "User_AppUsers" '
+                           'SET first_name = %(first_name)s, '
+                           'last_name = %(last_name)s, '
+                           'email = %(email)s, '
+                           'phone = %(phone)s '
+                           'WHERE id = %(id)s',
+                           data
+                           )
+            self.db_connection.get_connection().commit()
+            return result
+        except Exception as e:
+            result.set_status(False)
+            result.set_message(str(e))
+            return result
+        finally:
+            self.db_connection.get_connection().rollback()
+            cursor.close()
 
-    def update_password(self, app_user_id: int, new_password: str) -> Result:
-        pass
+    def update_password(self, app_user_id: int, password: str) -> Result:
+        result = Result()
+        cursor = self.db_connection.get_cursor()
+        try:
+            cursor.execute('UPDATE "User_AppUsers" '
+                           'SET password = %(password)s '
+                           'WHERE id = %(id)s',
+                           {
+                               "password": password,
+                               "id": app_user_id
+                           })
+            self.db_connection.get_connection().commit()
+            return result
+        except Exception as e:
+            result.set_status(False)
+            result.set_message(str(e))
+            return result
+        finally:
+            self.db_connection.get_connection().rollback()
+            cursor.close()
