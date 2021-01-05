@@ -7,6 +7,7 @@ from routes.api.v1.app import app_api
 from routes.api.v1.auth import auth_api
 from routes.api.v1.basic_user import basic_user_api
 from routes.api.v1.super_user import super_user_api
+from routes.api.v1.utils import utils_api
 
 app = Flask(__name__)
 app.secret_key = "Flask Session String"
@@ -17,6 +18,7 @@ app.register_blueprint(auth_api)
 app.register_blueprint(super_user_api)
 app.register_blueprint(admin_user_api)
 app.register_blueprint(basic_user_api)
+app.register_blueprint(utils_api)
 
 
 @app.route("/")
