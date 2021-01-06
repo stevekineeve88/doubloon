@@ -3,8 +3,6 @@ from datetime import datetime
 from math import ceil
 from unittest.mock import patch, MagicMock
 
-import bcrypt
-
 from modules.App.managers.AppManager import AppManager
 from modules.App.repositories.AppRepo import AppRepo
 from tests.unit.generators.MockGenerator import MockGenerator
@@ -77,6 +75,48 @@ class AppUnitTest(unittest.TestCase):
         self.assertEqual(app.get_uuid(), fetch_app_obj.get_uuid())
         self.assertEqual(app.get_name(), fetch_app_obj.get_name())
         self.assertEqual(app.get_created_date(), fetch_app_obj.get_created_date())
+
+    def test_get_app_by_uuid_returns_app(self):
+        app_id = 1
+        api_key = "apiKey"
+        name = "name"
+        uuid = "abc123"
+        created_date = datetime.today()
+        app = ObjectGenerator.create_app(
+            app_id,
+            api_key=api_key,
+            name=name,
+            uuid=uuid,
+            created_date=created_date
+        )
+        app_mock = MockGenerator.create_app_mock(app)
+        self.app_repo.load_by_uuid = MagicMock(
+            return_value=ObjectGenerator.create_result(True, [app_mock.get_all()], None, {})
+        )
+        fetch_app_obj = self.app_manager.get_by_uuid(uuid)
+        self.app_repo.load_by_uuid.assert_called_once_with(uuid)
+        self.assertEqual(app.get_uuid(), fetch_app_obj.get_uuid())
+
+    def test_get_app_by_name_returns_app(self):
+        app_id = 1
+        api_key = "apiKey"
+        name = "name"
+        uuid = "abc123"
+        created_date = datetime.today()
+        app = ObjectGenerator.create_app(
+            app_id,
+            api_key=api_key,
+            name=name,
+            uuid=uuid,
+            created_date=created_date
+        )
+        app_mock = MockGenerator.create_app_mock(app)
+        self.app_repo.load_by_name = MagicMock(
+            return_value=ObjectGenerator.create_result(True, [app_mock.get_all()], None, {})
+        )
+        fetch_app_obj = self.app_manager.get_by_name(name)
+        self.app_repo.load_by_name.assert_called_once_with(name)
+        self.assertEqual(app.get_name(), fetch_app_obj.get_name())
 
     def test_search_apps_returns_result(self):
         search_name = "name"

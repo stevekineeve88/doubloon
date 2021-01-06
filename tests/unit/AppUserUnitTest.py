@@ -1,5 +1,6 @@
 import unittest
 from datetime import datetime
+from math import ceil
 from unittest.mock import patch, MagicMock
 
 import bcrypt
@@ -121,6 +122,29 @@ class AppUserUnitTest(unittest.TestCase):
         self.assertEqual(self.app.get_id(), user.get_app().get_id())
         self.assertEqual(self.app.get_uuid(), user.get_app().get_uuid())
         self.assertTrue(bcrypt.checkpw(str.encode(password), str.encode(user.get_password())))
+
+    def test_get_app_user_by_username_returns_user(self):
+        username = "username"
+        user_obj = ObjectGenerator.create_app_user(
+            ObjectGenerator.create_system_role(self.SYSTEM_ROLES.ADMIN),
+            username=username
+        )
+        self.app_user_repo.load_by_username = MagicMock(
+            return_value=ObjectGenerator.create_result(True, [
+                MockGenerator.create_app_user_mock(
+                    user_obj,
+                    user_obj.get_id(),
+                    user_obj.get_uuid(),
+                    self.USER_STATUSES.ACTIVE["id"],
+                    self.SYSTEM_ROLES.ADMIN["id"],
+                    self.app.get_id(),
+                    self.app.get_uuid()
+                ).get_all()
+            ], None, {})
+        )
+        user_obj_fetch = self.app_user_manager.get_by_username(username, self.app)
+        self.app_user_repo.load_by_username.assert_called_once_with(username, self.app.get_id())
+        self.assertEqual(username, user_obj_fetch.get_username())
 
     def test_delete_app_user_returns_success(self):
         user_obj = ObjectGenerator.create_app_user(ObjectGenerator.create_system_role(self.SYSTEM_ROLES.ADMIN))
@@ -351,14 +375,9 @@ class AppUserUnitTest(unittest.TestCase):
         app_results = [self.app2, self.app]
         result_set = [user_mock_updated2, user_mock_updated1]
         total_count = len(result_set)
-        result_start = 0
-        result_end = len(result_set) - 1
-        next_offset = len(result_set)
+        last_page = int(ceil(total_count / limit))
         result = ObjectGenerator.create_result(True, result_set, None, {
             "total_count": total_count,
-            "result_start": result_start,
-            "result_end": result_end,
-            "next_offset": next_offset
         })
         self.app_user_repo.search_all = MagicMock(return_value=result)
         result_manager = self.app_user_manager.search_all(
@@ -371,9 +390,7 @@ class AppUserUnitTest(unittest.TestCase):
         offset = (page * limit) - limit
         self.app_user_repo.search_all.assert_called_once_with(search_username, limit, offset, status, order)
         self.assertEqual(total_count, result_manager.get_metadata_attribute("total_count"))
-        self.assertEqual(result_start, result_manager.get_metadata_attribute("result_start"))
-        self.assertEqual(result_end, result_manager.get_metadata_attribute("result_end"))
-        self.assertEqual(next_offset, result_manager.get_metadata_attribute("next_offset"))
+        self.assertEqual(last_page, result_manager.get_metadata_attribute("last_page"))
         user_objs = result_manager.get_data()
         for i in range(0, len(result_set)):
             self.assertEqual(result_set[i]["username"], user_objs[i].get_username())
@@ -427,17 +444,11 @@ class AppUserUnitTest(unittest.TestCase):
         order = {
             "username": -1
         }
-        app_results = [self.app2, self.app]
         result_set = [user_mock2.get_all(), user_mock1.get_all()]
         total_count = len(result_set)
-        result_start = 0
-        result_end = len(result_set) - 1
-        next_offset = len(result_set)
+        last_page = int(ceil(total_count / limit))
         result = ObjectGenerator.create_result(True, result_set, None, {
             "total_count": total_count,
-            "result_start": result_start,
-            "result_end": result_end,
-            "next_offset": next_offset
         })
         self.app_user_repo.search_app_users = MagicMock(return_value=result)
         result_manager = self.app_user_manager.search_app_users(
@@ -451,11 +462,8 @@ class AppUserUnitTest(unittest.TestCase):
         offset = (page * limit) - limit
         self.app_user_repo.search_app_users.assert_called_once_with(self.app.get_name(), search_username, limit, offset, status, order)
         self.assertEqual(total_count, result_manager.get_metadata_attribute("total_count"))
-        self.assertEqual(result_start, result_manager.get_metadata_attribute("result_start"))
-        self.assertEqual(result_end, result_manager.get_metadata_attribute("result_end"))
-        self.assertEqual(next_offset, result_manager.get_metadata_attribute("next_offset"))
+        self.assertEqual(last_page, result_manager.get_metadata_attribute("last_page"))
         user_objs = result_manager.get_data()
         for i in range(0, len(result_set)):
             self.assertEqual(result_set[i]["username"], user_objs[i].get_username())
             self.assertEqual(self.app.get_id(), user_objs[i].get_app().get_id())
-

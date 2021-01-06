@@ -104,12 +104,11 @@ class AppUserManager:
         page = kwargs.get("page") or 1
         offset = (limit * page) - limit if page > 0 else 0
         status = kwargs.get("status") or self.user_statuses.ACTIVE["id"]
-        order = kwargs.get("order") or {
-            "id": 1
-        }
+        order = kwargs.get("order") or {}
         result = self.app_user_repo.search_all(search, limit, offset, status, order)
         if not result.get_status():
             return result
+        result.set_metadata_attribute("last_page", int(ceil(result.get_metadata_attribute("total_count") / limit)))
         data = result.get_data()
         users = []
         for datum in data:

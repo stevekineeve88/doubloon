@@ -80,6 +80,25 @@ class SuperUserUnitTest(unittest.TestCase):
         self.assertEqual(phone, user.get_phone())
         self.assertTrue(bcrypt.checkpw(str.encode(password), str.encode(user.get_password())))
 
+    def test_get_super_user_by_username_returns_user(self):
+        username = "username"
+        user_obj = ObjectGenerator.create_super_user(
+            username=username
+        )
+        self.super_user_repo.load_by_username = MagicMock(
+            return_value=ObjectGenerator.create_result(True, [
+                MockGenerator.create_super_user_mock(
+                    user_obj,
+                    user_obj.get_id(),
+                    user_obj.get_uuid(),
+                    self.USER_STATUSES.ACTIVE["id"]
+                ).get_all()
+            ], None, {})
+        )
+        user_obj_fetch = self.super_user_manager.get_by_username(username)
+        self.super_user_repo.load_by_username.assert_called_once_with(username)
+        self.assertEqual(username, user_obj_fetch.get_username())
+
     def test_delete_super_user_returns_success(self):
         user_obj = ObjectGenerator.create_super_user()
         user_id = 1
