@@ -11,7 +11,7 @@ class SuperSelfCheckpoint(Checkpoint):
 
     def passes(self):
         token = self.split_token(self.__bearer_token)
-        user_session = self._session_manager.get_super_token(token)
+        user_session = self._session_manager.get_super_user_session(token)
         if user_session is None:
             return False
         return self._doubloon_access_id == self.__access_id and \

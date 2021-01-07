@@ -10,7 +10,7 @@ class AdminCheckpoint(Checkpoint):
 
     def passes(self):
         token = self.split_token(self.__bearer_token)
-        user_session = self._session_manager.get_admin_token(token)
+        user_session = self._session_manager.get_admin_user_session(token)
         if user_session is None:
             return False
         return user_session["app"]["uuid"] == self.__access_id and \

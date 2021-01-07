@@ -4,7 +4,13 @@ from modules.User.objects.UserStatus import UserStatus
 
 
 class User:
+    """ Object for basic user attributes that can be extended
+    """
+
     def __init__(self):
+        """ Constructor for User
+        """
+
         self.id = None
         self.user_status = None
         self.uuid = None
@@ -78,6 +84,3 @@ class User:
 
     def get_created_date(self) -> datetime:
         return self.created_date
-
-    def to_dict(self):
-        pass

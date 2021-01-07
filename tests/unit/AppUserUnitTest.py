@@ -317,94 +317,6 @@ class AppUserUnitTest(unittest.TestCase):
             self.app_user_manager.update_password(user_id, "wrong_password", new_password)
         self.app_user_repo.update_password.assert_not_called()
 
-    def test_search_all_app_users_returns_result(self):
-        active_status = self.USER_STATUSES.ACTIVE["id"]
-        search_username = "username"
-        user_obj1 = ObjectGenerator.create_app_user(
-            ObjectGenerator.create_system_role(self.SYSTEM_ROLES.ADMIN),
-            username=search_username+"1"
-        )
-        user_id1 = 1
-        uuid1 = "abc123"
-        user_obj2 = ObjectGenerator.create_app_user(
-            ObjectGenerator.create_system_role(self.SYSTEM_ROLES.ADMIN),
-            username=search_username+"2"
-        )
-        user_id2 = 2
-        uuid2 = "def456"
-        user_mock1 = MockGenerator.create_app_user_mock(
-            user_obj1,
-            user_id1,
-            uuid1,
-            active_status,
-            self.SYSTEM_ROLES.USER["id"],
-            self.app.get_id(),
-            self.app.get_uuid()
-        )
-        user_mock2 = MockGenerator.create_app_user_mock(
-            user_obj2,
-            user_id2,
-            uuid2,
-            active_status,
-            self.SYSTEM_ROLES.USER["id"],
-            self.app2.get_id(),
-            self.app2.get_uuid()
-        )
-        limit = 2
-        page = 1
-        status = self.USER_STATUSES.ACTIVE["id"]
-        order = {
-            "username": -1
-        }
-        user_mock_updated1 = user_mock1.get_all()
-        user_mock_updated2 = user_mock2.get_all()
-        user_mock_updated1.update({
-            "app_id": self.app.get_id(),
-            "app_uuid": self.app.get_uuid(),
-            "app_name": self.app.get_name(),
-            "app_api_key": self.app.get_api_key(),
-            "app_created_date": self.app.get_created_date()
-        })
-        user_mock_updated2.update({
-            "app_id": self.app2.get_id(),
-            "app_uuid": self.app2.get_uuid(),
-            "app_name": self.app2.get_name(),
-            "app_api_key": self.app2.get_api_key(),
-            "app_created_date": self.app2.get_created_date()
-        })
-        app_results = [self.app2, self.app]
-        result_set = [user_mock_updated2, user_mock_updated1]
-        total_count = len(result_set)
-        last_page = int(ceil(total_count / limit))
-        result = ObjectGenerator.create_result(True, result_set, None, {
-            "total_count": total_count,
-        })
-        self.app_user_repo.search_all = MagicMock(return_value=result)
-        result_manager = self.app_user_manager.search_all(
-            search=search_username,
-            limit=limit,
-            page=page,
-            status=status,
-            order=order
-        )
-        offset = (page * limit) - limit
-        self.app_user_repo.search_all.assert_called_once_with(search_username, limit, offset, status, order)
-        self.assertEqual(total_count, result_manager.get_metadata_attribute("total_count"))
-        self.assertEqual(last_page, result_manager.get_metadata_attribute("last_page"))
-        user_objs = result_manager.get_data()
-        for i in range(0, len(result_set)):
-            self.assertEqual(result_set[i]["username"], user_objs[i].get_username())
-            user_app: App = user_objs[i].get_app()
-            result_app: App = app_results[i]
-            self.assertEqual(result_app.get_id(), user_app.get_id())
-            self.assertEqual(result_app.get_uuid(), user_app.get_uuid())
-            self.assertEqual(result_app.get_name(), user_app.get_name())
-            self.assertEqual(result_app.get_api_key(), user_app.get_api_key())
-            self.assertEqual(
-                result_app.get_created_date().strftime("%Y-%m-%d"),
-                user_app.get_created_date().strftime("%Y-%m-%d")
-            )
-
     def search_specific_app_users_returns_result(self):
         active_status = self.USER_STATUSES.ACTIVE["id"]
         search_username = "username"
@@ -440,7 +352,7 @@ class AppUserUnitTest(unittest.TestCase):
         )
         limit = 2
         page = 1
-        status = self.USER_STATUSES.ACTIVE["id"]
+        user_status_id = self.USER_STATUSES.ACTIVE["id"]
         order = {
             "username": -1
         }
@@ -456,11 +368,11 @@ class AppUserUnitTest(unittest.TestCase):
             search=search_username,
             limit=limit,
             page=page,
-            status=status,
+            user_status_id=user_status_id,
             order=order
         )
         offset = (page * limit) - limit
-        self.app_user_repo.search_app_users.assert_called_once_with(self.app.get_name(), search_username, limit, offset, status, order)
+        self.app_user_repo.search_app_users.assert_called_once_with(self.app.get_name(), search_username, limit, offset, user_status_id, order)
         self.assertEqual(total_count, result_manager.get_metadata_attribute("total_count"))
         self.assertEqual(last_page, result_manager.get_metadata_attribute("last_page"))
         user_objs = result_manager.get_data()

@@ -11,7 +11,7 @@ class AppSelfCheckpoint(Checkpoint):
 
     def passes(self):
         token = self.split_token(self.__bearer_token)
-        user_session = self._session_manager.get_app_token(self.__access_id, token)
+        user_session = self._session_manager.get_app_user_session(self.__access_id, token)
         if user_session is None:
             return False
         return user_session["app"]["uuid"] == self.__access_id and \

@@ -2,10 +2,19 @@ from modules.User.objects.User import User
 
 
 class SuperUser(User):
+    """ Object that holds extended user attributes of super user
+    """
+
     def __init__(self):
+        """ Constructor for SuperUser
+        """
         super().__init__()
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
+        """ Convert object to dictionary
+        Returns:
+            dict
+        """
         return {
             "id": self.get_id(),
             "user_status": self.get_user_status().to_dict(),

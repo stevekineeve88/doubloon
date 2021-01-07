@@ -14,15 +14,33 @@ from modules.Util.DataList import DataList
 
 
 class AppUserManager:
+    """ Manager for handling app user CRUD operations
+    """
+
     def __init__(self, **kwargs):
+        """ Constructor for AppUserManager
+        Args:
+            **kwargs: Dependencies if needed
+                (AppUserRepo) app_user_repo
+                (UserStatusManager) user_status_manager
+                (SystemRoleManager) system_role_manager
+                (AppManager) app_manager
+        """
         self.app_user_repo: AppUserRepo = kwargs.get("app_user_repo") or AppUserRepo()
+        self.app_manager: AppManager = kwargs.get("app_manager") or AppManager()
         user_status_manager: UserStatusManager = kwargs.get("user_status_manager") or UserStatusManager()
         system_role_manager: SystemRoleManager = kwargs.get("system_role_manager") or SystemRoleManager()
         self.user_statuses: DataList = user_status_manager.get_all()
         self.system_roles: DataList = system_role_manager.get_all()
-        self.app_manager: AppManager = kwargs.get("app_manager") or AppManager()
 
     def create(self, app: App, user: AppUser) -> AppUser:
+        """ Create app user
+        Args:
+            (App) app:        App to add user to
+            (AppUser) user:   AppUser object to create off of
+        Returns:
+            AppUser
+        """
         data = {
             "username": user.get_username(),
             "app_id": app.get_id(),
@@ -37,56 +55,95 @@ class AppUserManager:
         }
         result = self.app_user_repo.insert(data)
         if not result.get_status():
-            raise Exception(result.get_message())
+            raise Exception("Could not create user")
         return self.get(result.get_insert_id())
 
     def get(self, app_user_id: int) -> AppUser:
+        """ Get app user by ID
+        Args:
+            app_user_id: App user ID
+        Returns:
+            AppUser
+        """
         result = self.app_user_repo.load(app_user_id)
         if not result.get_status() or not result.get_data():
             raise Exception(result.get_message())
         data = result.get_data()[0]
         app_id = data["app_id"]
         app = self.app_manager.get(app_id)
-        return self.__build_app_user_obj(result.get_data()[0], app)
+        return self.__build_app_user_obj(data, app)
 
     def get_by_username(self, username: str, app: App) -> AppUser:
+        """ Get app user by username
+        Args:
+            (str) username: App user username
+            (App) app:      App to search for username
+        Returns:
+            AppUser
+        """
         result = self.app_user_repo.load_by_username(username, app.get_id())
         if not result.get_status() or not result.get_data():
             raise Exception("Could not find user")
         return self.__build_app_user_obj(result.get_data()[0], app)
 
     def delete(self, app_user_id: int) -> AppUser:
+        """ Soft delete an app user by ID
+        Args:
+            (int) app_user_id: App user ID
+        Returns:
+            AppUser
+        """
         result = self.app_user_repo.update_status(app_user_id, self.user_statuses.DELETED["id"])
         if not result.get_status():
             raise Exception("Could not delete user")
         return self.get(app_user_id)
 
     def disable(self, app_user_id: int) -> AppUser:
+        """ Disable an app user by ID
+        Args:
+            (int) app_user_id: App user ID
+        Returns:
+            AppUser
+        """
         result = self.app_user_repo.update_status(app_user_id, self.user_statuses.DISABLED["id"])
         if not result.get_status():
             raise Exception("Could not disable user")
         return self.get(app_user_id)
 
     def activate(self, app_user_id: int) -> AppUser:
+        """ Activate an app user by ID
+        Args:
+            (int) app_user_id: App user ID
+        Returns:
+            AppUser
+        """
         result = self.app_user_repo.update_status(app_user_id, self.user_statuses.ACTIVE["id"])
         if not result.get_status():
-            raise Exception("Could not delete user")
+            raise Exception("Could not activate user")
         return self.get(app_user_id)
 
     def search_app_users(self, app: App, **kwargs):
-        search = kwargs.get("search") or ""
+        """ Search app users by app
+        Args:
+            (App) app:          App to search in
+            (kwargs) **kwargs:  Arguments for search
+                (str) search:        Search string
+                (int) limit:         Limit of result
+                (int) page:          Page of result
+                (int) user_status_id User status ID to partition search
+                (dict) order:        Order with key column and ASC(1) or DESC(-1)
+        Returns:
+            Result
+        """
         limit = kwargs.get("limit") or 100
         page = kwargs.get("page") or 1
-        offset = (limit * page) - limit if page > 0 else 0
-        status = kwargs.get("status") or self.user_statuses.ACTIVE["id"]
-        order = kwargs.get("order") or {}
         result = self.app_user_repo.search_app_users(
             app.get_name(),
-            search,
+            kwargs.get("search") or "",
             limit,
-            offset,
-            status,
-            order
+            (limit * page) - limit if page > 0 else 0,
+            kwargs.get("user_status_id") or self.user_statuses.ACTIVE["id"],
+            kwargs.get("order") or {}
         )
         if not result.get_status():
             raise Exception("Could not fetch users")
@@ -98,43 +155,34 @@ class AppUserManager:
         result.set_data(users)
         return result
 
-    def search_all(self, **kwargs):
-        search = kwargs.get("search") or ""
-        limit = kwargs.get("limit") or 100
-        page = kwargs.get("page") or 1
-        offset = (limit * page) - limit if page > 0 else 0
-        status = kwargs.get("status") or self.user_statuses.ACTIVE["id"]
-        order = kwargs.get("order") or {}
-        result = self.app_user_repo.search_all(search, limit, offset, status, order)
-        if not result.get_status():
-            return result
-        result.set_metadata_attribute("last_page", int(ceil(result.get_metadata_attribute("total_count") / limit)))
-        data = result.get_data()
-        users = []
-        for datum in data:
-            app = App()
-            app.set_id(datum["app_id"])
-            app.set_uuid(datum["app_uuid"])
-            app.set_name(datum["app_name"])
-            app.set_api_key(datum["app_api_key"])
-            app.set_created_date(datum["app_created_date"])
-            users.append(self.__build_app_user_obj(datum, app))
-        result.set_data(users)
-        return result
-
-    def update(self, user: AppUser):
+    def update(self, user: AppUser) -> AppUser:
+        """ Update app user
+        Args:
+            (AppUser) user: AppUser to update
+        Returns:
+            AppUser
+        """
         data = {
             "first_name": user.get_first_name(),
             "last_name": user.get_last_name(),
             "email": user.get_email(),
             "phone": user.get_phone()
         }
-        result = self.app_user_repo.update(user.get_id(), data)
+        app_user_id = user.get_id()
+        result = self.app_user_repo.update(app_user_id, data)
         if not result.get_status():
             raise Exception("Could not update user")
-        return self.get(user.get_id())
+        return self.get(app_user_id)
 
     def update_password(self, app_user_id: int, old_password: str, new_password: str) -> AppUser:
+        """ Update app user password by ID
+        Args:
+            (int) app_user_id:   App user ID
+            (str) old_password:  Old password
+            (str) new_password:  New password
+        Returns:
+            AppUser
+        """
         user = self.get(app_user_id)
         if not bcrypt.checkpw(str.encode(old_password), str.encode(user.get_password())):
             raise Exception("Password authentication failed for old password")
@@ -144,7 +192,25 @@ class AppUserManager:
             raise Exception("Failed to update password")
         return user
 
-    def __build_app_user_obj(self, data: dict, app: App):
+    def __build_app_user_obj(self, data: dict, app: App) -> AppUser:
+        """ Build AppUser object
+        Args:
+            (dict) data: Data for creating object
+                (int) id:                   App user ID
+                (int) user_status_id:       User status ID
+                (int) system_role_id:       System role ID
+                (str) uuid:                 App user UUID
+                (str) username:             App user username
+                (str) first_name:           App user first name
+                (str) last_name:            App user last_name
+                (str) password:             App user password encrypted
+                (str) email:                App user email
+                (str) phone:                App user phone
+                (datetime) created_date:    App user created date
+            (App) app:   App object for referencing
+        Returns:
+            AppUser
+        """
         status_data = self.user_statuses.get(data["user_status_id"])
         system_role = self.system_roles.get(data["system_role_id"])
         user = AppUser()
