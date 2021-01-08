@@ -2,3 +2,4 @@ venv/
 .idea/
 *.pyc
 *.pyo
+docker-resources/env/app.env
