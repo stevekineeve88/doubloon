@@ -6,10 +6,14 @@ from routes.middleware.config.checkpoints.AppSelfCheckpoint import AppSelfCheckp
 from routes.middleware.config.checkpoints.SuperCheckpoint import SuperCheckpoint
 
 
-def appselfware():
-    def _appselfware(f):
+def app_self_ware():
+    """ App self middleware
+    Returns:
+        json
+    """
+    def _app_self_ware(f):
         @wraps(f)
-        def __appselfware(*args, **kwargs):
+        def __app_self_ware(*args, **kwargs):
             access_id = request.headers.get("access_id") or ""
             api_key = request.headers.get("api_key") or ""
             app_access_id = request.headers.get("app_access_id") or ""
@@ -26,5 +30,5 @@ def appselfware():
                 "success": False,
                 "message": "No Authorization"
             })
-        return __appselfware
-    return _appselfware
+        return __app_self_ware
+    return _app_self_ware

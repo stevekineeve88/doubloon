@@ -6,14 +6,18 @@ from modules.User.managers.AppUserManager import AppUserManager
 from modules.User.managers.SystemRoleManager import SystemRoleManager
 from modules.User.objects.AppUser import AppUser
 from modules.User.objects.SystemRole import SystemRole
-from routes.middleware.adminware import adminware
+from routes.middleware.admin_ware import admin_ware
 
 admin_user_api = Blueprint('admin_user_api', __name__)
 
 
 @admin_user_api.route("/api/v1/user/admin/create", methods=["POST"])
-@adminware()
+@admin_ware()
 def create_app_user():
+    """ API create app user
+    Returns:
+        json
+    """
     try:
         app_user_manager = AppUserManager()
         system_role_manager = SystemRoleManager()
@@ -45,8 +49,12 @@ def create_app_user():
 
 
 @admin_user_api.route("/api/v1/user/admin/search", methods=["POST"])
-@adminware()
+@admin_ware()
 def get_app_users():
+    """ API get app users
+    Returns:
+        json
+    """
     try:
         app_user_manager = AppUserManager()
         app_manager = AppManager()
