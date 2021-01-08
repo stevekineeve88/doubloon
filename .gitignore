@@ -3,3 +3,4 @@ venv/
 *.pyc
 *.pyo
 docker-resources/env/app.env
+docker-resources/env/db.env

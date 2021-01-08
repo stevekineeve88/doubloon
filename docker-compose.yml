@@ -15,10 +15,8 @@ services:
     command: ["gunicorn", "--workers=2", "--threads=4", "--worker-class=gthread", "--bind", "0.0.0.0:5000", "index:app"]
   db:
     image: postgres
-    environment:
-      - POSTGRES_DB=doubloon_admin
-      - POSTGRES_USER=sayre
-      - POSTGRES_PASSWORD=Yohomie#88
+    env_file:
+      - docker-resources/env/db.env
     ports:
       - "5432:5432"
     volumes:
