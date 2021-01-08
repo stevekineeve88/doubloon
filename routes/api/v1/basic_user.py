@@ -6,13 +6,17 @@ from modules.User.managers.AppUserManager import AppUserManager
 from modules.User.managers.SystemRoleManager import SystemRoleManager
 from modules.User.objects.AppUser import AppUser
 from modules.User.objects.SystemRole import SystemRole
-from routes.middleware.appselfware import appselfware
+from routes.middleware.app_self_ware import app_self_ware
 
 basic_user_api = Blueprint('basic_user_api', __name__)
 
 
 @basic_user_api.route("/api/v1/user/app/create", methods=["POST"])
 def create_app_user():
+    """ API create app user
+    Returns:
+        json
+    """
     try:
         app_user_manager = AppUserManager()
         system_role_manager = SystemRoleManager()
@@ -49,8 +53,14 @@ def create_app_user():
 
 
 @basic_user_api.route("/api/v1/user/app/get/<app_user_id>", methods=["GET"])
-@appselfware()
+@app_self_ware()
 def get_app_user(app_user_id):
+    """ API get app user
+    Args:
+        (int) app_user_id: App user ID
+    Returns:
+        json
+    """
     try:
         app_user_manager = AppUserManager()
         user = app_user_manager.get(app_user_id)
@@ -68,8 +78,14 @@ def get_app_user(app_user_id):
 
 
 @basic_user_api.route("/api/v1/user/app/update/<app_user_id>", methods=["PATCH"])
-@appselfware()
+@app_self_ware()
 def update_app_user(app_user_id):
+    """ API update app user
+    Args:
+        (int) app_user_id: App user ID
+    Returns:
+        json
+    """
     try:
         app_user_manager = AppUserManager()
         post = json.loads(request.data.decode())
@@ -96,8 +112,14 @@ def update_app_user(app_user_id):
 
 
 @basic_user_api.route("/api/v1/user/app/delete/<app_user_id>", methods=["DELETE"])
-@appselfware()
+@app_self_ware()
 def delete_app_user(app_user_id):
+    """ API delete app user
+    Args:
+        (int) app_user_id: App user ID
+    Returns:
+        json
+    """
     try:
         app_user_manager = AppUserManager()
         user = app_user_manager.delete(app_user_id)
@@ -116,8 +138,14 @@ def delete_app_user(app_user_id):
 
 
 @basic_user_api.route("/api/v1/user/app/disable/<app_user_id>", methods=["PATCH"])
-@appselfware()
+@app_self_ware()
 def disable_app_user(app_user_id):
+    """ API disable app user
+    Args:
+        (int) app_user_id: App user ID
+    Returns:
+        json
+    """
     try:
         app_user_manager = AppUserManager()
         user = app_user_manager.disable(app_user_id)
@@ -136,8 +164,14 @@ def disable_app_user(app_user_id):
 
 
 @basic_user_api.route("/api/v1/user/app/activate/<app_user_id>", methods=["PATCH"])
-@appselfware()
+@app_self_ware()
 def activate_app_user(app_user_id):
+    """ API activate app user
+    Args:
+        (int) app_user_id: App user ID
+    Returns:
+        json
+    """
     try:
         app_user_manager = AppUserManager()
         user = app_user_manager.activate(app_user_id)
@@ -156,8 +190,14 @@ def activate_app_user(app_user_id):
 
 
 @basic_user_api.route("/api/v1/user/app/update-password/<app_user_id>", methods=["PATCH"])
-@appselfware()
+@app_self_ware()
 def update_app_user_password(app_user_id):
+    """ API update app user password
+    Args:
+        (int) app_user_id: App user ID
+    Returns:
+        json
+    """
     try:
         app_user_manager = AppUserManager()
         post = json.loads(request.data.decode())

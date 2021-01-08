@@ -23,4 +23,8 @@ app.register_blueprint(utils_api)
 
 @app.route("/")
 def index():
-    return "Hello"
+    """ Home page
+    Returns:
+        str
+    """
+    return "Welcome to the Doubloon API"

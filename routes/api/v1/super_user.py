@@ -2,15 +2,19 @@ import json
 from flask import Blueprint, jsonify, request
 from modules.User.managers.SuperUserManager import SuperUserManager
 from modules.User.objects.SuperUser import SuperUser
-from routes.middleware.superselfware import superselfware
-from routes.middleware.superware import superware
+from routes.middleware.super_self_ware import super_self_ware
+from routes.middleware.super_ware import super_ware
 
 super_user_api = Blueprint('super_user_api', __name__)
 
 
 @super_user_api.route("/api/v1/user/super/create", methods=["POST"])
-@superware()
+@super_ware()
 def create_super_user():
+    """ API create super user
+    Returns:
+        json
+    """
     try:
         super_user_manager = SuperUserManager()
         post = json.loads(request.data.decode())
@@ -34,8 +38,14 @@ def create_super_user():
 
 
 @super_user_api.route("/api/v1/user/super/get/<super_user_id>", methods=["GET"])
-@superware()
+@super_ware()
 def get_super_user(super_user_id):
+    """ API get super user
+    Args:
+        (int) super_user_id: Super user ID
+    Returns:
+        json
+    """
     try:
         super_user_manager = SuperUserManager()
         user = super_user_manager.get(super_user_id)
@@ -51,8 +61,14 @@ def get_super_user(super_user_id):
 
 
 @super_user_api.route("/api/v1/user/super/delete/<super_user_id>", methods=["DELETE"])
-@superware()
+@super_ware()
 def delete_super_user(super_user_id):
+    """ API delete super user
+    Args:
+        (int) super_user_id: Super user ID
+    Returns:
+        json
+    """
     try:
         super_user_manager = SuperUserManager()
         user = super_user_manager.delete(super_user_id)
@@ -71,8 +87,14 @@ def delete_super_user(super_user_id):
 
 
 @super_user_api.route("/api/v1/user/super/disable/<super_user_id>", methods=["PATCH"])
-@superware()
+@super_ware()
 def disable_super_user(super_user_id):
+    """ API disable super user
+    Args:
+        (int) super_user_id: Super user ID
+    Returns:
+        json
+    """
     try:
         super_user_manager = SuperUserManager()
         user = super_user_manager.disable(super_user_id)
@@ -91,8 +113,14 @@ def disable_super_user(super_user_id):
 
 
 @super_user_api.route("/api/v1/user/super/activate/<super_user_id>", methods=["PATCH"])
-@superware()
+@super_ware()
 def activate_super_user(super_user_id):
+    """ API activate super user
+    Args:
+        (int) super_user_id: Super user ID
+    Returns:
+        json
+    """
     try:
         super_user_manager = SuperUserManager()
         user = super_user_manager.activate(super_user_id)
@@ -111,8 +139,12 @@ def activate_super_user(super_user_id):
 
 
 @super_user_api.route("/api/v1/user/super/list", methods=["POST"])
-@superware()
+@super_ware()
 def list_super_users():
+    """ API list super users
+    Returns:
+        json
+    """
     try:
         super_user_manager = SuperUserManager()
         post = json.loads(request.data.decode())
@@ -145,8 +177,14 @@ def list_super_users():
 
 
 @super_user_api.route("/api/v1/user/super/update/<super_user_id>", methods=["PATCH"])
-@superselfware()
+@super_self_ware()
 def update_super_user(super_user_id):
+    """ API update super user
+    Args:
+        (int) super_user_id: Super user ID
+    Returns:
+        json
+    """
     try:
         super_user_manager = SuperUserManager()
         post = json.loads(request.data.decode())
@@ -173,8 +211,14 @@ def update_super_user(super_user_id):
 
 
 @super_user_api.route("/api/v1/user/super/update-password/<super_user_id>", methods=["PATCH"])
-@superselfware()
+@super_self_ware()
 def update_super_user_password(super_user_id):
+    """ API update super user password
+    Args:
+        (int) super_user_id: Super user ID
+    Returns:
+        json
+    """
     try:
         super_user_manager = SuperUserManager()
         post = json.loads(request.data.decode())

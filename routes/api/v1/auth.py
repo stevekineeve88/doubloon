@@ -10,6 +10,10 @@ auth_api = Blueprint('auth_api', __name__)
 
 @auth_api.route("/api/v1/auth/super/login", methods=["POST"])
 def super_login():
+    """ API super user login
+    Returns:
+        json
+    """
     try:
         post = json.loads(request.data.decode())
         auth_manager = AuthenticationManager()
@@ -35,6 +39,10 @@ def super_login():
 
 @auth_api.route("/api/v1/auth/admin/login", methods=["POST"])
 def admin_login():
+    """ API admin user login
+    Returns:
+        json
+    """
     try:
         post = json.loads(request.data.decode())
         auth_manager = AuthenticationManager()
@@ -62,6 +70,10 @@ def admin_login():
 
 @auth_api.route("/api/v1/auth/app/login", methods=["POST"])
 def app_login():
+    """ API app user login
+    Returns:
+        json
+    """
     try:
         post = json.loads(request.data.decode())
         auth_manager = AuthenticationManager()
