@@ -12,7 +12,7 @@ services:
       - docker-resources/env/app.env
     volumes:
       - "./:/code"
-    command: ["gunicorn", "--workers=2", "--threads=4", "--worker-class=gthread", "--bind", "0.0.0.0:5000", "index:app"]
+    command: ["python", "-m", "flask", "run"]
   db:
     image: postgres
     env_file:
